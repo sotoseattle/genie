@@ -81,9 +81,6 @@ class Genes < RandomVar
 end
 
 
-
-
-
 family_tree = {
   :Ira    => [],
   :Robin  => [],

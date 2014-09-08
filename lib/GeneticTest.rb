@@ -1,27 +1,43 @@
 require 'grimoire'
-require 'person'
 
 class GeneticTest
   attr_accessor :subjects
 
   def initialize(family_tree)
     @subjects = {}
-    family_tree.each_key{|name| @subjects[name] = Person.new(name)}
-    family_tree.each do |name, parents|
-      unless parents.empty?
-        people = parents.map{|p| @subjects[p]}
-        @subjects[name].is_son_of(people)
-      end
-      @subjects[name].factorize
-    end    
+    instantiate_individuals(family_tree.keys)
+    assign_parents(family_tree)
+
+    subjects.each_value do |guy|
+      guy.initialize_factors(pheno_stats, geno_stats)
+    end
   end
 
-  def compute_joint_cpd
-    ff = subjects.map{|name, person| person.factor}
-    all_factors = FactorArray.new(ff)
-    a = all_factors.product(true)
-    puts a.vars.size
-    a
+  def instantiate_individuals(family_members)
+    family_members.each do |name| 
+      subjects[name] = Person.new(name:name, alleles:alleles)
+    end
+  end
+
+  def assign_parents(family_tree)
+    family_tree.each do |name, parents|
+      unless parents.empty?
+        people = parents.map{|p| subjects[p]}
+        subjects[name].was_born_to(people)
+      end
+    end
+  end
+
+  def alleles
+    raise NotImplementedError.new("You must implement for genetic model")
+  end
+
+  def geno_stats
+    raise NotImplementedError.new("You must implement for genetic model")
+  end
+
+  def pheno_stats
+    raise NotImplementedError.new("You must implement for genetic model")
   end
 
   # probability of person having the phenotype analyzed present (in 100 %)
@@ -34,6 +50,15 @@ class GeneticTest
 
   def [](name)
     @subjects[name.to_sym]
+  end
+
+  private
+  def compute_joint_cpd
+    ff = subjects.map{|name, person| person.factor}
+    all_factors = FactorArray.new(ff)
+    puts "all_factors.size: #{all_factors.size}"
+    b = all_factors.product(true)
+    return b
   end
 
 end

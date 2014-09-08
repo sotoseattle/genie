@@ -2,10 +2,9 @@ require 'grimoire'
 
 class Gene < RandomVar
   private
-  attr_writer :parent_gen_dad, :parent_gen_mom
+  attr_writer :ascendant
   public
-  attr_reader :parent_gen_dad, :parent_gen_mom, :name, 
-              :alleles, :ascendant
+  attr_reader :name, :alleles, :ascendant
 
   SPLIT_CONSTANT = 2.0
 
@@ -13,14 +12,14 @@ class Gene < RandomVar
     args.merge({name:''})
     @alleles = args[:alleles]
     @ascendant = nil
-    super({name:name, card:alleles.size, ass:alleles})
+    super({name:args[:name], card:alleles.size, ass:alleles})
   end
 
   def inherits_from(parent)
-    @ascendant = parent
+    self.ascendant = parent
   end
 
-  def factor(stats)
+  def factor_given(stats)
     ascendant ? f_inherited : f_non_inherited(stats)
   end
 
@@ -34,13 +33,13 @@ class Gene < RandomVar
   end
 
   def f_inherited
-    grandad, granmom = ascendant.gene_dad, ascendant.gene_mom
+    grandad, granmom = ascendant.g1, ascendant.g2
     h = vectorize_assignments
 
     f = Factor.new({vars:[self, grandad, granmom]})
-    grandad.ass.each_with_index do |g1, i|
-      granmom.ass.each_with_index do |g2, j|
-        f.vals[true,i,j] = h[g1] + h[g2]
+    grandad.ass.each_with_index do |a, i|
+      granmom.ass.each_with_index do |b, j|
+        f.vals[true,i,j] = h[a] + h[b]
       end
     end
 
