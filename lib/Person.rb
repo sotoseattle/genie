@@ -3,9 +3,9 @@ require 'grimoire'
 class Person
 
   private
-  attr_accessor :factor
+  attr_accessor :factor, :parent_1, :parent_2
   public
-  attr_reader :name, :g1, :g2, :phenotype, :factor
+  attr_reader :name, :g1, :g2, :phenotype, :factor, :parent_1, :parent_2
 
   def initialize(args)
     raise ArgumentError unless @name = args[:name]
@@ -17,8 +17,13 @@ class Person
   end
 
   def was_born_to(parents)
-    g1.inherits_from(parents[0])
-    g2.inherits_from(parents[1])
+    self.parent_1, self.parent_2 = parents
+    g1.inherits_from(parent_1)
+    g2.inherits_from(parent_2)
+  end
+
+  def parents
+    [parent_1, parent_2]
   end
 
   def initialize_factors(pheno_stats, geno_stats)
@@ -28,13 +33,12 @@ class Person
       g2.factor_given(geno_stats)])
     .product(false)
   end
- 
+
   def observe_pheno(ass)
     factor.reduce({phenotype => ass}).norm
   end
- 
+
   def observe_alleles(ass)
-    # factor.reduce({genes => ass}).norm
     factor.reduce({g1 => ass[0], g2 => ass[1]}).norm
   end
 
